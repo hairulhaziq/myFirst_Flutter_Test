@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'note.dart'; // Ensure this matches your file name
+import 'note.dart';
 
-// Define the modes as requested
 enum NoteMode { view, edit, add }
 
 class EditScreen extends StatefulWidget {
   final NoteMode mode;
-  final Note? note; // Nullable because "Add" mode has no note yet
+  final Note? note;
 
   const EditScreen({super.key, required this.mode, this.note});
 
@@ -15,19 +14,57 @@ class EditScreen extends StatefulWidget {
 }
 
 class _EditScreenState extends State<EditScreen> {
-  // We will fully implement the UI logic in Task B7/B8
+  String get _appBarTitle {
+    switch (widget.mode) {
+      case NoteMode.view:
+        return "View Note";
+      case NoteMode.edit:
+        return "Edit Note";
+      case NoteMode.add:
+        return "Add new Note";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Just for verification of B6
-        title: Text("Mode: ${widget.mode.toString().split('.').last}"),
+        title: Text(
+          _appBarTitle,
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.blue,
+        automaticallyImplyLeading: false,
+        actions: [
+          if (widget.mode == NoteMode.edit || widget.mode == NoteMode.add)
+            IconButton(
+              icon: const Icon(
+                Icons.check_circle,
+                size: 30,
+                color: Colors.white,
+              ),
+              onPressed: () {},
+            ),
+          IconButton(
+            icon: const Icon(
+              Icons.cancel,
+              size: 30,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+          const SizedBox(width: 10),
+        ],
       ),
-      body: Center(
-        child: Text(
-          widget.note != null
-              ? "Note Title: ${widget.note!.title}"
-              : "New Note",
+      body: const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(""),
+          ],
         ),
       ),
     );
