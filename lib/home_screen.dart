@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'edit_screen.dart';
+import 'note.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -60,8 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
             itemBuilder: (context, index) {
               final data = docs[index].data() as Map<String, dynamic>;
               final String noteId = docs[index].id;
-              String title = data['title'] ?? '';
-              String content = data['content'] ?? '';
+              Note noteObj = Note.fromMap(data, noteId);
 
               return Card(
                 margin: const EdgeInsets.all(8.0),
@@ -74,6 +75,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Expanded(
                             child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => EditScreen(
+                                      mode: NoteMode.view,
+                                      note: noteObj,
+                                    ),
+                                  ),
+                                );
+                              },
                               onLongPress: () {
                                 setState(() {
                                   if (_selectedNoteId == noteId) {
@@ -84,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 });
                               },
                               child: Text(
-                                title,
+                                noteObj.title,
                                 style: const TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold),
                               ),
@@ -93,7 +105,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (_selectedNoteId == noteId) ...[
                             IconButton(
                               icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => EditScreen(
+                                      mode: NoteMode.edit,
+                                      note: noteObj,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete, color: Colors.blue),
@@ -102,10 +124,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     .collection('notes')
                                     .doc(noteId)
                                     .delete();
-
-                                setState(() {
-                                  _selectedNoteId = null;
-                                });
                               },
                             ),
                           ]
@@ -113,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       if (_showContent) ...[
                         const SizedBox(height: 8),
-                        Text(content),
+                        Text(noteObj.content),
                       ]
                     ],
                   ),
@@ -140,7 +158,14 @@ class _HomeScreenState extends State<HomeScreen> {
           FloatingActionButton(
             backgroundColor: Colors.blue, foregroundColor: Colors.white,
             heroTag: "btn2",
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditScreen(mode: NoteMode.add),
+                ),
+              );
+            },
             child: const Icon(Icons.add),
           ),
         ],
