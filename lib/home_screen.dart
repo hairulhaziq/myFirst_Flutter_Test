@@ -15,51 +15,53 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('notes')
-          .where('email', isEqualTo: currentUser?.email)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError)
-          return const Scaffold(body: Center(child: Text("Error")));
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
-        }
-
-        final docs = snapshot.data!.docs;
-        final int noteCount = docs.length;
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              "My Notes",
-              style: TextStyle(
-                color: Colors.white,
-              ),
-            ),
-            backgroundColor: Colors.blue,
-            actions: [
-              // Display the count in a circle or just text
-              Padding(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "My Notes",
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.blue,
+        actions: [
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('notes')
+                .where('email', isEqualTo: currentUser?.email)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox();
+              return Padding(
                 padding: const EdgeInsets.only(right: 20.0),
                 child: CircleAvatar(
                   backgroundColor: Colors.white,
-                  child: Text("$noteCount"),
+                  child: Text("${snapshot.data!.docs.length}"),
                 ),
-              )
-            ],
-          ),
-          body: ListView.builder(
-            itemCount: noteCount,
+              );
+            },
+          )
+        ],
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('notes')
+            .where('email', isEqualTo: currentUser?.email)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return const Center(child: Text("Error"));
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final docs = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: docs.length,
             itemBuilder: (context, index) {
-              // 3. DATA MAPPING: Convert Firestore data to your Note object
-              // Note: Adjust 'Note.fromMap' if your model uses a different factory name
               final data = docs[index].data() as Map<String, dynamic>;
-              // We manually map here to be safe, or use your model class:
-              final String title = data['title'] ?? 'No Title';
-              final String content = data['content'] ?? 'No Content';
+              String title = data['title'] ?? '';
+              String content = data['content'] ?? '';
 
               return Card(
                 margin: const EdgeInsets.all(8.0),
@@ -73,35 +75,40 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 8),
-                      Text(content),
+                      if (_showContent) ...[
+                        const SizedBox(height: 8),
+                        Text(content),
+                      ]
                     ],
                   ),
                 ),
               );
             },
+          );
+        },
+      ),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            backgroundColor: Colors.blue, foregroundColor: Colors.white,
+            heroTag: "btn1",
+            onPressed: () {
+              setState(() {
+                _showContent = !_showContent;
+              });
+            },
+            child: Icon(_showContent ? Icons.unfold_less : Icons.unfold_more),
           ),
-          floatingActionButton: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              FloatingActionButton(
-                backgroundColor: Colors.blue, foregroundColor: Colors.white,
-                heroTag: "btn1", // Unique tag for multiple FABs
-                onPressed: () {},
-                child:
-                    Icon(_showContent ? Icons.unfold_less : Icons.unfold_more),
-              ),
-              const SizedBox(width: 10),
-              FloatingActionButton(
-                backgroundColor: Colors.blue, foregroundColor: Colors.white,
-                heroTag: "btn2",
-                onPressed: () {},
-                child: const Icon(Icons.add), // [cite: 116]
-              ),
-            ],
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            backgroundColor: Colors.blue, foregroundColor: Colors.white,
+            heroTag: "btn2",
+            onPressed: () {},
+            child: const Icon(Icons.add),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
