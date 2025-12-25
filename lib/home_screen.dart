@@ -12,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final User? currentUser = FirebaseAuth.instance.currentUser;
   bool _showContent = true;
+  String? _selectedNoteId;
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text(
           "My Notes",
-          style: TextStyle(
-            color: Colors.white,
-          ),
+          style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.blue,
         actions: [
@@ -60,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: docs.length,
             itemBuilder: (context, index) {
               final data = docs[index].data() as Map<String, dynamic>;
+              final String noteId = docs[index].id;
               String title = data['title'] ?? '';
               String content = data['content'] ?? '';
 
@@ -70,10 +70,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onLongPress: () {
+                                setState(() {
+                                  if (_selectedNoteId == noteId) {
+                                    _selectedNoteId = null;
+                                  } else {
+                                    _selectedNoteId = noteId;
+                                  }
+                                });
+                              },
+                              child: Text(
+                                title,
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          if (_selectedNoteId == noteId) ...[
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {},
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.blue),
+                              onPressed: () {},
+                            ),
+                          ]
+                        ],
                       ),
                       if (_showContent) ...[
                         const SizedBox(height: 8),
